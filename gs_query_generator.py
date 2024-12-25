@@ -10,7 +10,7 @@ def gen_gs_query(description, words=0):
         model=gpt_config.gen_query_model,
         messages=prompt.gs_query_prompt(description)
     )
-    ans = res['choices'][0]['message']['content']
+    ans = res.choices[0].message.content
     print(ans)
     return ans
 

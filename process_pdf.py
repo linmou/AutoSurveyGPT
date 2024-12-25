@@ -30,10 +30,11 @@ def extract_sections(pdf_text):
     client = openai.OpenAI(api_key=config.openai_api_key, base_url=config.base_url)
     res = client.chat.completions.create(
         model=gpt_config.pdf_extraction_model,
-        messages=prompt.pdf_section_extraction_prompt(pdf_text)
+        messages=prompt.pdf_section_extraction_prompt(pdf_text),
+        response_format={"type": "json_object"}
     )
 
-    ans = res['choices'][0]['message']['content']
+    ans = res.choices[0].message.content
     logging.info('openai raw ans: '+ans)
     ans = json.loads(ans, strict=False)
 

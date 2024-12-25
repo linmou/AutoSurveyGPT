@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import logging
@@ -17,7 +19,9 @@ import prompt
 
 class GenericWebsiteParser:
     def __init__(self) -> None:
-        self.browser = webdriver.Chrome(gpt_config.get_driver_path())
+        chrome_options = Options()
+        service = Service(executable_path=gpt_config.get_driver_path())
+        self.browser = webdriver.Chrome(service=service, options=chrome_options)
         self.browser.implicitly_wait(5)
         self.logger = logging.getLogger(__name__)
   
@@ -34,12 +38,11 @@ class GenericWebsiteParser:
         if url.endswith('.pdf'):
             return self.parse_pdf(url)
 
-
+        logging.info('Processing url: ' + url)
         self.browser.get(url)
-        logging.debug('Processing url: '+url)
         html = self.browser.page_source
         txt = self.browser.find_element(By.XPATH, "/html/body").text
-        # self.logger.info('extracted text for '+url+': '+txt)
+        self.logger.info('extracted text for ' + url + ': ' + txt)
 
         ans = GenericWebsiteParser.parsing_html_by_gpt(txt)
         return ans
@@ -49,7 +52,7 @@ class GenericWebsiteParser:
 
 
     @staticmethod
-    def parsing_html_by_gpt(self, html_text, text_len_limit=10000, max_tryout=3):
+    def parsing_html_by_gpt(html_text, text_len_limit=10000, max_tryout=3):
         if len(html_text)>=text_len_limit:
             html_text = html_text[0:text_len_limit]
 
@@ -58,9 +61,10 @@ class GenericWebsiteParser:
             client = openai.OpenAI(api_key=config.openai_api_key, base_url=config.base_url)
             res = client.chat.completions.create(
                 model=gpt_config.html_parse_model,
-                messages=prompt.html_parsing_prompt(html_text)
+                messages=prompt.html_parsing_prompt(html_text),
+                response_format={"type": "json_object"}
             )
-            ans = res['choices'][0]['message']['content']
+            ans = res.choices[0].message.content
             try:
                 jans = json.loads(ans, strict=False)
                 print('gpt ans:'+str(jans))
@@ -96,10 +100,11 @@ class GenericWebsiteParser:
             client = openai.OpenAI(api_key=config.openai_api_key, base_url=config.base_url)
             res = client.chat.completions.create(
                 model=gpt_config.abstract_parse_model,
-                messages=prompt.read_abstract_prompt2(abstract, my_topic)
+                messages=prompt.read_abstract_prompt2(abstract, my_topic),
+                response_format={"type": "json_object"}
             )
 
-            ans = res['choices'][0]['message']['content']
+            ans = res.choices[0].message.content
             try:
                 ans = json.loads(ans, strict=False)
                 # print('gpt ans for similarity:'+str(ans))
@@ -113,8 +118,9 @@ class GenericWebsiteParser:
 
 def unit_test():
     setup_logging()
+    logging.getLogger().setLevel(logging.DEBUG)
     parser= GenericWebsiteParser()
-    parser.visit_url_and_parse('https://arxiv.org/abs/2304.08448')
+    return parser.visit_url_and_parse('https://arxiv.org/abs/2304.08448')
 
 
 
@@ -128,4 +134,4 @@ def unit_test_prompt():
     pass
 
 if __name__ == "__main__":
-    unit_test_prompt()
+    print(unit_test())

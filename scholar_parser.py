@@ -5,23 +5,22 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import logging
+import gpt_config
 from logging_config import setup_logging
 import re
 import time
 import random
 from gpt_config import get_driver_path
+from selenium.webdriver.chrome.service import Service
 
 class GScholarParser:
     def __init__(self) -> None:
         chrome_options = webdriver.ChromeOptions()
-        # Adding argument to disable the AutomationControlled flag 
         chrome_options.add_argument("--disable-blink-features=AutomationControlled") 
-
-        driver_path = get_driver_path()
-
-        self.browser = webdriver.Chrome(executable_path=driver_path, chrome_options=chrome_options)
+        
+        service = Service(executable_path=gpt_config.get_driver_path())
+        self.browser = webdriver.Chrome(service=service, options=chrome_options)
         self.browser.implicitly_wait(5)
-
         self.logger = logging.getLogger(__name__)
         
     def visit_url(self, url, depth=1):

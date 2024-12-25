@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: MIT
 # This function will attempt to find a pdf link given a paper title
 
+import gpt_config
 from query_processor import QueryProcessor
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from gpt_config import get_driver_path
 import logging
 import time
@@ -23,7 +25,9 @@ class PDFFinder:
             "plugins.always_open_pdf_externally": True
             }
         )
-        self.browser = webdriver.Chrome(executable_path=get_driver_path(), options = chrome_options)
+        
+        service = Service(executable_path=gpt_config.get_driver_path())
+        self.browser = webdriver.Chrome(service=service, options=chrome_options)
         self.browser.implicitly_wait(5)
         self.logger = logging.getLogger(__name__)
         self.gs_url = QueryProcessor.gen_gs_search(title)

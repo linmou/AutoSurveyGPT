@@ -53,7 +53,6 @@ class QueryProcessor:
 
 
     def gs_search(self, url, depth=1, repeat_flag=False):
-
         len_before = len(self.task_queue)
 
         if repeat_flag:
@@ -61,14 +60,17 @@ class QueryProcessor:
         else:
             self.task_queue += self.gsparse.visit_url(url, depth)
 
+        # Check if task_queue is empty after visiting URL
+        if len(self.task_queue) <= len_before:
+            logging.warning('No papers found from URL: ' + url)
+            return
         
-        while len(self.task_queue)-len_before<self.initial_query['search_breadth']:
+        while len(self.task_queue)-len_before < self.initial_query['search_breadth']:
             logging.info('parsed papers: '+str(len(self.task_queue)-len_before)+' last paper: '+str(self.task_queue[-1]))
             if self.task_queue[-1].metadata['next_page_url'] == "":
                 break
             self.task_queue += self.gsparse.visit_url(self.task_queue[-1].metadata['next_page_url'], depth)
 
-        
         if len(self.task_queue)-len_before > self.initial_query['search_breadth']:
             self.task_queue = self.task_queue[:len_before+self.initial_query['search_breadth']]
 
