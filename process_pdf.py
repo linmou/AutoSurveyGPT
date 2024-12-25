@@ -27,8 +27,8 @@ def extract_first_n_words(pdf_stream, n):
 
 def extract_sections(pdf_text):
     logging.info('extracting sections using openai')
-    openai.api_key = config.openai_api_key
-    res = openai.ChatCompletion.create(
+    client = openai.OpenAI(api_key=config.openai_api_key, base_url=config.base_url)
+    res = client.chat.completions.create(
         model=gpt_config.pdf_extraction_model,
         messages=prompt.pdf_section_extraction_prompt(pdf_text)
     )

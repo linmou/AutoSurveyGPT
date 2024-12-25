@@ -5,7 +5,8 @@ import prompt
 
 def gen_gs_query(description, words=0):
     openai.api_key = config.openai_api_key
-    res = openai.ChatCompletion.create(
+    client = openai.OpenAI(api_key=config.openai_api_key, base_url=config.base_url)
+    res = client.chat.completions.create(
         model=gpt_config.gen_query_model,
         messages=prompt.gs_query_prompt(description)
     )

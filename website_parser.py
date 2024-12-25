@@ -20,7 +20,6 @@ class GenericWebsiteParser:
         self.browser = webdriver.Chrome(gpt_config.get_driver_path())
         self.browser.implicitly_wait(5)
         self.logger = logging.getLogger(__name__)
-        
   
     def visit_url_and_parse(self, url):
         """
@@ -50,14 +49,14 @@ class GenericWebsiteParser:
 
 
     @staticmethod
-    def parsing_html_by_gpt(html_text, text_len_limit=10000, max_tryout=3):
-        openai.api_key = config.openai_api_key
+    def parsing_html_by_gpt(self, html_text, text_len_limit=10000, max_tryout=3):
         if len(html_text)>=text_len_limit:
             html_text = html_text[0:text_len_limit]
 
         tryout = 0
         while tryout<max_tryout:
-            res = openai.ChatCompletion.create(
+            client = openai.OpenAI(api_key=config.openai_api_key, base_url=config.base_url)
+            res = client.chat.completions.create(
                 model=gpt_config.html_parse_model,
                 messages=prompt.html_parsing_prompt(html_text)
             )
@@ -94,8 +93,8 @@ class GenericWebsiteParser:
         tryout = 0
         while tryout<max_tryout:
             logging.info("tryout: "+str(tryout)+". Analyzing abstract for "+abstract)
-            openai.api_key = config.openai_api_key
-            res = openai.ChatCompletion.create(
+            client = openai.OpenAI(api_key=config.openai_api_key, base_url=config.base_url)
+            res = client.chat.completions.create(
                 model=gpt_config.abstract_parse_model,
                 messages=prompt.read_abstract_prompt2(abstract, my_topic)
             )
